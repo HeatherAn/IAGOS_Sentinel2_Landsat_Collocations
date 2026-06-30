@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Thymen Woldhuis <t.woldhuis-1@tudelft.nl>
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Implements the ICAO Standard Atmosphere model, up to 80 km altitude.
 

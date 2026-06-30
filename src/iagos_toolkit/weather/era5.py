@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Thymen Woldhuis <t.woldhuis-1@tudelft.nl>
+# SPDX-License-Identifier: Apache-2.0
+
 from datetime import datetime, timedelta
 import math
 from pathlib import Path
@@ -18,7 +21,7 @@ def download_arco_era5_data(
     air_pressure: float,
     sensing_time,
     output_file: str,
-    variables=("t", "q", "u", "v"),
+    variables=("t", "q", "u", "v", "cc"),
 ) -> xr.Dataset:
     """
     Download ARCO ERA5 pressure-level data around a sensing time and altitude.
@@ -60,8 +63,6 @@ def download_arco_era5_data(
     above = model_level_df[model_level_df["pf [hPa]"] >= target_pressure_hpa].iloc[0]
     below = model_level_df[model_level_df["pf [hPa]"] < target_pressure_hpa].iloc[-1]
 
-    print(above)
-    print(below)
     pressure_levels = [
         round(above["pf [hPa]"]),
         round(below["pf [hPa]"]),
@@ -124,13 +125,14 @@ def get_arco_era5_data(
     else:
         if local_file is None:
             raise ValueError("local_file must be provided if download is required")
-
+        
         ds = download_arco_era5_data(
             air_pressure=air_pressure,
             sensing_time=sensing_time,
             output_file=local_file,
         )
-        era5_filename = Path(local_file).name
+
+    era5_filename = Path(local_file).name
 
     # Compute pressure level
     target_pressure_pa = air_pressure
@@ -157,7 +159,7 @@ def get_arco_era5_data(
         output_dtypes=[float],
     )
 
-    # Interpolate
+    # Linear interpolation for most variables
     interp = ds.interp(
         longitude=longitude,
         latitude=latitude,
@@ -168,10 +170,8 @@ def get_arco_era5_data(
     )
 
     # Convert to dictionary
-    result = {
-        var: interp[var].item()
-        for var in interp.data_vars
-    }
+    result = {var: interp[var].item() for var in interp.data_vars}
+
     result["air_pressure"] = interp["air_pressure"].item()
     result["era5_filename"] = era5_filename
 
@@ -182,42 +182,68 @@ def get_arco_era5_data(
 
     return result
 
+def get_cloud_cover(
+    air_pressure: float,
+    longitude: float,
+    latitude: float,
+    sensing_time,
+    local_file: str | None = None,
+):
+    sensing_time = pd.Timestamp(sensing_time).tz_convert(None)
+    target_time = np.datetime64(sensing_time)
 
-def create_met_from_era5(era5_path: str, extrapolate_time: str = None) -> MetDataset:
-    # Load ERA5 meteorological dataset
-    era5_data = xr.open_dataset(era5_path)
+    # Compute pressure level
+    target_pressure_pa = air_pressure
+    target_pressure_hpa = target_pressure_pa / 100
 
-    if min_altitude is not None and max_altitude is not None:
-        # Compute min and max pressure (in hPa) from flight altitudes using ISA model
-        min_pressure = round(get_p_ISA(max_altitude) / 100) - 1
-        max_pressure = round(get_p_ISA(min_altitude) / 100) + 1
+    ds = xr.open_dataset(local_file)
 
-        # Get existing pressure levels in the dataset
-        existing_levels = era5_data.level.values
+    interp = ds.interp(
+        longitude=longitude,
+        latitude=latitude,
+        time=target_time,
+        level=target_pressure_hpa,
+        method="nearest",
+    )
+    return interp["fraction_of_cloud_cover"].item()
 
-        # Append min and max pressure if they are outside the existing range
-        new_levels = np.unique(np.append(existing_levels, [min_pressure, max_pressure]))
-        new_levels.sort()
 
-        # Interpolate/extrapolate dataset along the level axis
-        era5_data = era5_data.interp(level=new_levels, method="linear", kwargs={"fill_value": "extrapolate"})
 
-    if extrapolate_time != 0:
-        # Convert to timedelta
-        delta = timedelta(hours=abs(extrapolate_time))
-        times = era5_data.time.values
-        if extrapolate_time < 0:
-            new_time = np.append([times[0] - np.timedelta64(delta)], times)
-        elif extrapolate_time > 0:
-            new_time = np.append(times, [times[-1] + np.timedelta64(delta)])
+# def create_met_from_era5(era5_path: str, extrapolate_time: str = None) -> MetDataset:
+#     # Load ERA5 meteorological dataset
+#     era5_data = xr.open_dataset(era5_path)
 
-        new_time = np.sort(np.unique(new_time))
+#     if min_altitude is not None and max_altitude is not None:
+#         # Compute min and max pressure (in hPa) from flight altitudes using ISA model
+#         min_pressure = round(get_p_ISA(max_altitude) / 100) - 1
+#         max_pressure = round(get_p_ISA(min_altitude) / 100) + 1
 
-        # Interpolate along time axis
-        era5_data = era5_data.interp(time=new_time, method="linear", kwargs={"fill_value": "extrapolate"})
+#         # Get existing pressure levels in the dataset
+#         existing_levels = era5_data.level.values
 
-    # Wrap ERA5 data in a MetDataset object
-    return MetDataset(era5_data)
+#         # Append min and max pressure if they are outside the existing range
+#         new_levels = np.unique(np.append(existing_levels, [min_pressure, max_pressure]))
+#         new_levels.sort()
+
+#         # Interpolate/extrapolate dataset along the level axis
+#         era5_data = era5_data.interp(level=new_levels, method="linear", kwargs={"fill_value": "extrapolate"})
+
+#     if extrapolate_time != 0:
+#         # Convert to timedelta
+#         delta = timedelta(hours=abs(extrapolate_time))
+#         times = era5_data.time.values
+#         if extrapolate_time < 0:
+#             new_time = np.append([times[0] - np.timedelta64(delta)], times)
+#         elif extrapolate_time > 0:
+#             new_time = np.append(times, [times[-1] + np.timedelta64(delta)])
+
+#         new_time = np.sort(np.unique(new_time))
+
+#         # Interpolate along time axis
+#         era5_data = era5_data.interp(time=new_time, method="linear", kwargs={"fill_value": "extrapolate"})
+
+#     # Wrap ERA5 data in a MetDataset object
+#     return MetDataset(era5_data)
 
 
 def create_met_from_era5(

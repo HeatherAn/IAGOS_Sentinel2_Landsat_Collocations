@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Thymen Woldhuis <t.woldhuis-1@tudelft.nl>
+# SPDX-License-Identifier: Apache-2.0
+
 import math
 import numpy as np
 import pandas as pd

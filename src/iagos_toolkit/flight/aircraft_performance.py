@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Thymen Woldhuis <t.woldhuis-1@tudelft.nl>
+# SPDX-License-Identifier: Apache-2.0
+
 from matplotlib.pyplot import show
 import xarray as xr
 import pandas as pd
@@ -14,8 +17,8 @@ from iagos_toolkit.weather.iagos import create_met_from_iagos
 from iagos_toolkit.weather.era5 import create_met_from_era5
 from iagos_toolkit.flight.iagos_fleet import AIRCRAFT_PARS
 
-BADA4_PATH = None
-BADA3_PATH = None
+BADA4_PATH = "/Users/twoldhuis1/Documents/APMs/BADA 4.2 pycontrails"
+BADA3_PATH = "/Users/twoldhuis1/Documents/APMs/bada_315_cfc23ebb2306e5a61b91"
 
 
 def create_flight_from_adsb(
@@ -125,7 +128,7 @@ def create_flight_from_iagos(
 
     # Select altitude source
     if "gps_alt_AC" in df.columns:
-        altitude_col = "gps_alt_AC"
+        # altitude_col = "gps_alt_AC"
         altitude_col = "baro_alt_AC"
     elif "baro_alt_AC" in df.columns:
         altitude_col = "baro_alt_AC"
