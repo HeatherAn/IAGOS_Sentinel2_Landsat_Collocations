@@ -1,0 +1,65 @@
+---
+version: https://codecheck.org.uk/spec/config/1.0
+
+paper:
+  title: "Observing formation and early evolution of contrails formed by IAGOS aircraft using high-resolution LEO satellite imagery"
+  authors:
+    - name: Thymen Woldhuis
+      ORCID: 0009-0000-2237-1839
+  reference: https://doi.org/10.5194/egusphere-2026-1171
+
+manifest:
+  - file: fig02.png
+    comment: manuscript Figure 2
+  - file: fig03.png
+    comment: manuscript Figure 3
+  - file: fig04.png
+    comment: manuscript Figure 4
+  - file: fig05.png
+    comment: manuscript Figure 5
+  - file: fig06.png
+    comment: manuscript Figure 6
+  - file: fig07.png
+    comment: manuscript Figure 7
+  - file: fig08.png
+    comment: manuscript Figure 8
+  - file: fig09.png
+    comment: manuscript Figure 9
+  - file: figA1.png
+    comment: manuscript Figure A1 
+  - file: figA2.png
+    comment: manuscript Figure A2  
+  - file: figA3.png
+    comment: manuscript Figure A3  
+  - file: figA4.png
+    comment: manuscript Figure A4 
+  - file: figA5.png
+    comment: manuscript Figure A5   
+  - file: figB1.png
+    comment: manuscript Figure B1  
+  - file: figC1.png
+    comment: manuscript Figure C1  
+  - file: figC2.png
+    comment: manuscript Figure C2  
+  - file: figD1.png
+    comment: manuscript Figure D1  
+  - file: figD2.png
+    comment: manuscript Figure D2   
+  - file: figD3.png
+    comment: manuscript Figure D3   
+  - file: figD4.png
+    comment: manuscript Figure D4  
+
+codechecker:
+  - name: Heather Andrews
+    ORCID: 0000-0002-6637-2830
+
+summary: >
+  Reproduction of figures in the publication. Figure 1 is an image of a diagram. The repository also contains the files  
+  figure_3_zoom_ac.png, figure_3_zoom_detector.png and figure_3_zoom_vortex.png, which correspond to the top-left (panel a), center (panel b) 
+  and right panels (panel c) of Figure 3 in the publication, respectively. The center panel of Figure 3 in the publication includes 
+  annotations (text, arrow, and a width indicator) that are not present in figure_3_zoom_detector.png. Apart from these annotations, the figures are identical.
+repository: https://github.com/codecheckers/IAGOS_Sentinel2_Landsat_Collocations
+check_time: "2026-03-03 14:00:00" # update
+certificate: 2026-021
+report: https://doi.org/ # add certificate Zenodo DOI
